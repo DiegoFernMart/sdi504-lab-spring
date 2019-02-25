@@ -9,18 +9,23 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import com.uniovi.entities.*;
+import com.uniovi.services.RolesService;
 import com.uniovi.services.SecurityService;
 import com.uniovi.services.UsersService;
 import com.uniovi.validators.SignUpFormValidator;
 
 @Controller
 public class UsersController {
+
+	@Autowired
+	private RolesService rolesService;
+
 	@Autowired
 	private UsersService usersService;
 
 	@Autowired
 	private SecurityService securityService;
-	
+
 	@Autowired
 	private SignUpFormValidator signUpFormValidator;
 
@@ -32,7 +37,7 @@ public class UsersController {
 
 	@RequestMapping(value = "/user/add")
 	public String getUser(Model model) {
-		model.addAttribute("usersList", usersService.getUsers());
+		model.addAttribute("rolesList", rolesService.getRoles());
 		return "user/add";
 	}
 
@@ -63,7 +68,7 @@ public class UsersController {
 
 	@RequestMapping(value = "/user/edit/{id}", method = RequestMethod.POST)
 	public String setEdit(Model model, @PathVariable Long id, @ModelAttribute User user) {
-		
+
 		User original = usersService.getUser(id);
 		original.setName(user.getName());
 		original.setLastName(user.getLastName());
@@ -73,12 +78,12 @@ public class UsersController {
 	}
 
 	@RequestMapping(value = "/signup", method = RequestMethod.POST)
-	public String signup(@Validated User user, BindingResult result, Model
-	model) {
+	public String signup(@ModelAttribute @Validated User user, BindingResult result, Model model) {
 		signUpFormValidator.validate(user, result);
 		if (result.hasErrors()) {
 			return "signup";
 		}
+		user.setRole(rolesService.getRoles()[0]);
 		usersService.addUser(user);
 		securityService.autoLogin(user.getDni(), user.getPasswordConfirm());
 		return "redirect:home";
@@ -88,7 +93,7 @@ public class UsersController {
 	public String login(Model model) {
 		return "login";
 	}
-	
+
 	@RequestMapping(value = { "/home" }, method = RequestMethod.GET)
 	public String home(Model model) {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -97,12 +102,11 @@ public class UsersController {
 		model.addAttribute("markList", activeUser.getMarks());
 		return "home";
 	}
-	
+
 	@RequestMapping(value = "/signup", method = RequestMethod.GET)
 	public String signup(Model model) {
 		model.addAttribute("user", new User());
 		return "signup";
 	}
 
-	
 }

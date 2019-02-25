@@ -90,4 +90,13 @@ public class User {
 	public String getFullName() {
 		return this.name + " " + this.lastName;
 	}
+
+	public void setRole(String string) {
+		this.role=string;
+		
+	}
+
+	public String getRole() {
+		return this.role;
+	}
 }
