@@ -1,12 +1,17 @@
 package com.uniovi.controllers;
 
 
+import java.security.Principal;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 
 import com.uniovi.entities.Mark;
+import com.uniovi.entities.User;
 import com.uniovi.services.MarksService;
 import com.uniovi.services.UsersService;
 
@@ -20,10 +25,15 @@ public class MarksControllers {
 	private UsersService usersService;
 
 	@RequestMapping("/mark/list")
-	public String getList(Model model) {
-		model.addAttribute("markList", marksService.getMarks());
-		return "mark/list";
+	public String getList(Model model){
+	Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+	String dni = auth.getName();
+	User user = usersService.getUserByDni(dni);
+	model.addAttribute("markList", marksService.getMarksForUser(user));
+	return "mark/list";
 	}
+
+
 
 	@RequestMapping(value = "/mark/add")
 	public String getMark(Model model) {
@@ -70,9 +80,11 @@ public class MarksControllers {
 	}
 
 	@RequestMapping("/mark/list/update")
-	public String updateList(Model model) {
-		model.addAttribute("markList", marksService.getMarks());
-		return "mark/list :: tableMarks";
+	public String updateList(Model model, Principal principal){
+	String dni = principal.getName(); // DNI es el name de la autenticación
+	User user = usersService.getUserByDni(dni);
+	model.addAttribute("markList", marksService.getMarksForUser(user));
+	return "mark/list :: tableMarks";
 	}
 
 	@RequestMapping(value = "/mark/{id}/resend", method = RequestMethod.GET)
